@@ -96,3 +96,4 @@ resource "azurerm_linux_virtual_machine" "vm" {
 
   tags = merge(local.common_tags, { idx = tostring(count.index) })
 }
+#
