@@ -1,4 +1,8 @@
-# RG
+# =======================
+# main.tf  (clean)
+# =======================
+
+# Resource Group
 resource "azurerm_resource_group" "rg" {
   name     = var.resource_group_name
   location = var.location
@@ -31,7 +35,7 @@ resource "azurerm_public_ip" "pip" {
   tags                = local.common_tags
 }
 
-# NIC через for_each
+# NIC через for_each (імена беруться з locals.nic_names)
 resource "azurerm_network_interface" "nic" {
   for_each            = toset(local.nic_names)
   name                = each.value
@@ -43,17 +47,18 @@ resource "azurerm_network_interface" "nic" {
     name                          = "ipcfg"
     private_ip_address_allocation = "Dynamic"
     subnet_id                     = azurerm_subnet.subnet.id
-    public_ip_address_id          = each.value == "nic-a" ? azurerm_public_ip.pip.id : null
+    # лише nic-a отримує публічну IP
+    public_ip_address_id = each.value == "nic-a" ? azurerm_public_ip.pip.id : null
   }
 }
 
-# Прив’язка NSG до nic-a (приклад)
+# NSG створюється в nsg.tf. Тут лише прикріплюємо до nic-a
 resource "azurerm_network_interface_security_group_association" "nic_a_nsg" {
   network_interface_id      = azurerm_network_interface.nic["nic-a"].id
   network_security_group_id = azurerm_network_security_group.nsg.id
 }
 
-# ВМ через count
+# Linux VM через count
 resource "azurerm_linux_virtual_machine" "vm" {
   count               = var.vm_count
   name                = format("vm%02d", count.index + 1)
@@ -80,11 +85,11 @@ resource "azurerm_linux_virtual_machine" "vm" {
     storage_account_type = "Standard_LRS"
   }
 
+  # Прив'язуємо nic-a до vm01, nic-b до vm02 тощо
   network_interface_ids = [
     azurerm_network_interface.nic[local.nic_names[count.index]].id
   ]
 
-  # lifecycle: захист від випадкового видалення
   lifecycle {
     prevent_destroy = true
   }
