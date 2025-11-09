@@ -3,7 +3,6 @@
 ############################
 # Resource Group
 ############################
->>>>>>> 2d35639 (Implement HCL features: count, for_each, lifecycle, dynamic, functions)
 resource "azurerm_resource_group" "rg" {
   name     = var.resource_group_name
   location = var.location
@@ -43,7 +42,6 @@ resource "azurerm_public_ip" "pip" {
 ############################
 # NIC через for_each
 ############################
->>>>>>> 2d35639 (Implement HCL features: count, for_each, lifecycle, dynamic, functions)
 resource "azurerm_network_interface" "nic" {
   for_each            = toset(local.nic_names)
   name                = each.value
@@ -55,7 +53,7 @@ resource "azurerm_network_interface" "nic" {
     name                          = "ipcfg"
     private_ip_address_allocation = "Dynamic"
     subnet_id                     = azurerm_subnet.subnet.id
-    public_ip_address_id = each.value == "nic-a" ? azurerm_public_ip.pip.id : null
+    public_ip_address_id          = each.value == "nic-a" ? azurerm_public_ip.pip.id : null
   }
 }
 
