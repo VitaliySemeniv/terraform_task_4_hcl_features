@@ -1,15 +1,18 @@
-# =======================
-# main.tf  (clean)
-# =======================
 
+
+############################
 # Resource Group
+############################
+>>>>>>> 2d35639 (Implement HCL features: count, for_each, lifecycle, dynamic, functions)
 resource "azurerm_resource_group" "rg" {
   name     = var.resource_group_name
   location = var.location
   tags     = local.common_tags
 }
 
+############################
 # VNET + Subnet
+############################
 resource "azurerm_virtual_network" "vnet" {
   name                = "vnet-hcl-demo"
   location            = azurerm_resource_group.rg.location
@@ -25,7 +28,9 @@ resource "azurerm_subnet" "subnet" {
   address_prefixes     = ["10.42.1.0/24"]
 }
 
+############################
 # Public IP (для nic-a)
+############################
 resource "azurerm_public_ip" "pip" {
   name                = "pip-hcl-demo"
   location            = azurerm_resource_group.rg.location
@@ -35,7 +40,10 @@ resource "azurerm_public_ip" "pip" {
   tags                = local.common_tags
 }
 
-# NIC через for_each (імена беруться з locals.nic_names)
+############################
+# NIC через for_each
+############################
+>>>>>>> 2d35639 (Implement HCL features: count, for_each, lifecycle, dynamic, functions)
 resource "azurerm_network_interface" "nic" {
   for_each            = toset(local.nic_names)
   name                = each.value
@@ -47,18 +55,19 @@ resource "azurerm_network_interface" "nic" {
     name                          = "ipcfg"
     private_ip_address_allocation = "Dynamic"
     subnet_id                     = azurerm_subnet.subnet.id
-    # лише nic-a отримує публічну IP
     public_ip_address_id = each.value == "nic-a" ? azurerm_public_ip.pip.id : null
   }
 }
 
-# NSG створюється в nsg.tf. Тут лише прикріплюємо до nic-a
+
+
 resource "azurerm_network_interface_security_group_association" "nic_a_nsg" {
   network_interface_id      = azurerm_network_interface.nic["nic-a"].id
   network_security_group_id = azurerm_network_security_group.nsg.id
 }
 
-# Linux VM через count
+
+
 resource "azurerm_linux_virtual_machine" "vm" {
   count               = var.vm_count
   name                = format("vm%02d", count.index + 1)
@@ -85,7 +94,6 @@ resource "azurerm_linux_virtual_machine" "vm" {
     storage_account_type = "Standard_LRS"
   }
 
-  # Прив'язуємо nic-a до vm01, nic-b до vm02 тощо
   network_interface_ids = [
     azurerm_network_interface.nic[local.nic_names[count.index]].id
   ]
@@ -96,4 +104,3 @@ resource "azurerm_linux_virtual_machine" "vm" {
 
   tags = merge(local.common_tags, { idx = tostring(count.index) })
 }
-#@@@
